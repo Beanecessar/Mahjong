@@ -1,0 +1,2 @@
+class MWell(object):
+	pass
