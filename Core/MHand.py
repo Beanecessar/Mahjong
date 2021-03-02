@@ -1,2 +1,0 @@
-class MHand(object):
-	pass
