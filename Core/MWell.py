@@ -1,2 +1,0 @@
-class MWell(object):
-	pass
