@@ -1,4 +1,4 @@
-from MTile import MTile
+from Core.MTile import MTile
 
 class MHand(object):
 	"""
@@ -7,8 +7,13 @@ class MHand(object):
 	def __init__(self, *args):
 		if len(args) == 0:
 			self.tiles = []
-		elif len(args) == 1 and isinstance(args[1], list):
-			self.tiles = args[1]
+		elif len(args) == 1 and isinstance(args[0], list):
+			self.tiles = args[0]
+		elif len(args) == 1 and isinstance(args[0], MHand):
+			self.tiles = args[0].Tiles.copy()
+
+	def __str__(self):
+		return " ".join([str(t) for t in self.tiles])
 
 	@property
 	def Tiles(self):
@@ -33,6 +38,11 @@ class MHand(object):
 		for tile in self.tiles:
 			if tile.tileType in sortMap:
 				sortMap[tile.tileType](tile)
+		for tg in [dots, bamboo, characters, winds, dragons, jokers]:
+			tg.sort(key=lambda k: k.tileNum)
 		tiles = dots + bamboo + characters + winds + dragons + jokers
-		assert(len(tile)==self.tiles)
+		assert(len(tiles)==len(self.tiles))
 		self.tiles = tiles
+
+	def Draw(self, tile):
+		self.tiles.append(tile)

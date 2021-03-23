@@ -1,5 +1,5 @@
-from MTile import MTile
-import copy
+from Core.MTile import MTile, AllNormalTiles
+from Core.MHand import MHand
 
 class MRuleSet(object):
 	"""
@@ -23,9 +23,10 @@ class MRuler(object):
 		# 特殊牌型1: 国士无双
 		# 特殊牌型2: 七对子
 
+		allResults = []
 		# 搜索将牌
-		for i in range(hand):
-			tiles = copy.deepcopy(hand.Tiles)
+		for i in range(len(hand.Tiles)):
+			tiles = hand.Tiles.copy()
 			oneEye = tiles.pop(i)
 			# index只判断==
 			try:
@@ -34,6 +35,8 @@ class MRuler(object):
 				continue
 			eyes = [oneEye, tiles.pop(i)]
 			results = self.__CheckMelds(tiles, eyes, [], [])
+			allResults += results
+		return allResults
 
 	def __CheckMelds(self, tiles, eyes, chows, pongs):
 		results = []
@@ -44,29 +47,60 @@ class MRuler(object):
 	def __CheckChow(self, tiles, eyes, chows, pongs, results):
 		first = tiles[0]
 		if first.tileType not in [MTile.Dots, MTile.Bamboo, MTile.Characters]:
-			return False
+			return
 		if first.tileNum > MTile.Seven:
-			return False
+			return
 		try:
 			i = tiles.index(first+1)
 			j = tiles.index(first+2)
 		except ValueError:
-			return False
-		chows = copy.deepcopy(chows)
-		chow = [first, tiles[i], tiles[j]]
+			return
+
+		tiles = tiles.copy()
+		chows = chows.copy()
+		chow = [tiles.pop(0)]
+		i = tiles.index(first+1)
+		chow.append(tiles.pop(i))
+		i = tiles.index(first+2)
+		chow.append(tiles.pop(i))
 		chows.append(chow)
-		tiles = copy.deepcopy(tiles)
-		chowids = [id(t) for t in chow]
-		for i in range(len(tiles), -1, -1):
-			if id(tiles[i]) in chowids:
-				tiles.pop(i)
-		if (len(tiles)>0):
-			self.__CheckChow(tiles, eyes, chows, pongs, results)
-			self.__CheckPongs(tiles, eyes, chows, pongs, results)
-		else:
-			results += [eyes, chows, pongs]
-			return True
+
+		if len(tiles) == 0:
+			results.append([eyes, chows, pongs])
+			return
+		self.__CheckChow(tiles, eyes, chows, pongs, results)
+		self.__CheckPongs(tiles, eyes, chows, pongs, results)
+		return
 
 	def __CheckPongs(self, tiles, eyes, chows, pongs, results):
-		pass
+		first = tiles[0]
+		if first.tileType not in [MTile.Dots, MTile.Bamboo, MTile.Characters]:
+			return
+		if tiles.count(first) < 3:
+			return
 
+		tiles = tiles.copy()
+		pongs = pongs.copy()
+		pong = [tiles.pop(0)]
+		i = tiles.index(first)
+		pong.append(tiles.pop(i))
+		i = tiles.index(first)
+		pong.append(tiles.pop(i))
+		pongs.append(pong)
+
+		if len(tiles) == 0:
+			results.append([eyes, chows, pongs])
+			return
+		self.__CheckChow(tiles, eyes, chows, pongs, results)
+		self.__CheckPongs(tiles, eyes, chows, pongs, results)
+		return
+
+	def FindSolve(self, hand):
+		solveSpace = []
+		for tile in AllNormalTiles:
+			newHand = MHand(hand)
+			newHand.Draw(tile)
+			results = self.CheckHand(newHand)
+			if len(results) > 0:
+				solveSpace.append(str(tile))
+		return solveSpace
